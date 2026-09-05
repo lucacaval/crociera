@@ -382,11 +382,19 @@
       margin-bottom: 0.3rem;
     }
 
-    .ship-icon {
-      font-size: 30px;
-      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.55));
-      transition: transform 0.12s linear;
-      line-height: 1;
+    .ship-marker {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45));
+      transition: transform 0.15s linear;
+    }
+    .ship-marker svg {
+      width: 40px;
+      height: 40px;
+      display: block;
     }
 
     @media (max-width: 700px) {
@@ -539,19 +547,20 @@
 
     const map = L.map('map', {
       zoomControl: true,
-      attributionControl: false
+      attributionControl: true
     }).setView([41.6, 6.2], 6);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 18
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
     const fullPath = ports.map(p => [p.lat, p.lng]);
     L.polyline(fullPath, {
-      color: '#d4af37',
-      weight: 3,
-      opacity: 0.75,
-      dashArray: '10 7',
+      color: '#0b4f7a',
+      weight: 4,
+      opacity: 0.85,
+      dashArray: '12 8',
       lineCap: 'round'
     }).addTo(map);
 
@@ -563,10 +572,10 @@
         html: `<div style="
           width:${isStartEnd ? 16 : 13}px;
           height:${isStartEnd ? 16 : 13}px;
-          background:${isStartEnd ? '#d4af37' : '#3a9fd4'};
+          background:${isStartEnd ? '#d4af37' : '#1a6f9c'};
           border:2.5px solid #fff;
           border-radius:50%;
-          box-shadow:0 0 10px rgba(0,0,0,0.5);
+          box-shadow:0 1px 6px rgba(0,0,0,0.4);
         "></div>`,
         iconSize: [isStartEnd ? 16 : 13, isStartEnd ? 16 : 13],
         iconAnchor: [isStartEnd ? 8 : 6.5, isStartEnd ? 8 : 6.5]
@@ -578,11 +587,51 @@
           <small>Giorno ${p.day} • ${p.date}</small>`);
     });
 
+    const shipSvg = `
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hull" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f5f7fa"/>
+            <stop offset="55%" stop-color="#e8eef5"/>
+            <stop offset="100%" stop-color="#c5d0de"/>
+          </linearGradient>
+          <linearGradient id="bottom" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1a6f9c"/>
+            <stop offset="100%" stop-color="#0d4a6e"/>
+          </linearGradient>
+        </defs>
+        <!-- wake -->
+        <ellipse cx="32" cy="52" rx="18" ry="4" fill="rgba(26,111,156,0.25)"/>
+        <!-- hull bottom -->
+        <path d="M10 40 L14 48 Q32 54 50 48 L54 40 Z" fill="url(#bottom)"/>
+        <!-- main hull -->
+        <path d="M8 34 L12 40 L52 40 L56 34 Q54 30 50 30 L14 30 Q10 30 8 34 Z" fill="url(#hull)" stroke="#9aafc0" stroke-width="0.8"/>
+        <!-- superstructure -->
+        <rect x="22" y="18" width="22" height="12" rx="2" fill="#fff" stroke="#b0c0d0" stroke-width="0.7"/>
+        <rect x="26" y="12" width="14" height="7" rx="1.5" fill="#f0f4f8" stroke="#b0c0d0" stroke-width="0.6"/>
+        <!-- bridge windows -->
+        <rect x="28" y="13.5" width="3.5" height="3" rx="0.5" fill="#3a9fd4"/>
+        <rect x="33" y="13.5" width="3.5" height="3" rx="0.5" fill="#3a9fd4"/>
+        <rect x="38" y="13.5" width="1.5" height="3" rx="0.4" fill="#3a9fd4"/>
+        <!-- deck windows -->
+        <rect x="25" y="21" width="3" height="2.5" rx="0.4" fill="#5eb3d9"/>
+        <rect x="30" y="21" width="3" height="2.5" rx="0.4" fill="#5eb3d9"/>
+        <rect x="35" y="21" width="3" height="2.5" rx="0.4" fill="#5eb3d9"/>
+        <rect x="40" y="21" width="2" height="2.5" rx="0.4" fill="#5eb3d9"/>
+        <!-- funnel -->
+        <rect x="30" y="5" width="6" height="8" rx="1" fill="#c0392b"/>
+        <rect x="30" y="5" width="6" height="2.5" rx="0.8" fill="#e74c3c"/>
+        <!-- gold stripe -->
+        <rect x="12" y="36" width="40" height="1.8" fill="#d4af37" opacity="0.9"/>
+        <!-- bow accent -->
+        <path d="M50 30 L56 34 L52 40" fill="none" stroke="#d4af37" stroke-width="1.2" opacity="0.7"/>
+      </svg>`;
+
     const shipIcon = L.divIcon({
       className: '',
-      html: `<div class="ship-icon">🚢</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17]
+      html: `<div class="ship-marker">${shipSvg}</div>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22]
     });
     const ship = L.marker([ports[0].lat, ports[0].lng], {
       icon: shipIcon,
@@ -624,7 +673,7 @@
         const angle = Math.atan2(next.lng - pt.lng, next.lat - pt.lat) * 180 / Math.PI;
         const el = ship.getElement();
         if (el) {
-          const icon = el.querySelector('.ship-icon');
+          const icon = el.querySelector('.ship-marker');
           if (icon) icon.style.transform = `rotate(${angle}deg)`;
         }
       }
